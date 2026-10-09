@@ -78,12 +78,15 @@ def validate(dataloader, model, loss_fn):
 
 
 # SETUP
-# Pass in data directory name as CLI argument, e.g. python train.py 2025-12-13-14-15
-if len(sys.argv) != 2:
-    print("Training script needs data! Please provide date and time!")
+# Pass in data directory and model architecture name as CLI argument, e.g. python train.py 2025-12-13-14-15 mobilenet_v3_small
+if len(sys.argv) < 2 or len(sys.argv) > 3:
+    print("Usage: python learn.py <datetime> [architecture]")
     sys.exit(1)  # exit with an error code
+ymdhm = sys.argv[1]  # year-month-date-hour-minute
+if len(sys.argv) == 3:
+    arch_name = sys.argv[2]
 else:
-    data_datetime = sys.argv[1]
+    arch_name = "mobilenet_v3_small"
 # Designate processing unit for CNN training
 DEVICE = (
     "cuda"
@@ -94,7 +97,7 @@ DEVICE = (
 )
 print(f"Using {DEVICE} device")
 # Instantiate dataset
-data_dir = Path(__file__).resolve().parent.parent / "data" / data_datetime
+data_dir = Path(__file__).resolve().parent.parent / "data" / ymdhm
 annotations_path = data_dir / "labels.csv"
 # Split train/val (90:10)
 anno_df = pd.read_csv(
@@ -132,9 +135,15 @@ val_dataloader = DataLoader(val_set, batch_size=128)
 model_dir = data_dir / "models"
 model_dir.mkdir(parents=True, exist_ok=True)
 # Instantiate model and config training
-model = models.mobilenet_v3_small(weights=None, num_classes=2).to(
-    DEVICE
-)  # choose the architecture class from cnn_network.py
+# model = models.mobilenet_v3_small(weights=None, num_classes=2).to(
+#     DEVICE
+# )  # choose the architecture class from cnn_network.py
+try:
+    model_class = getattr(models, arch_name)
+    model = model_class(weights=None, num_classes=2).to(DEVICE)
+except AttributeError:
+    print(f"Error: '{arch_name}' is not a valid architecture in torchvision.models.")
+    sys.exit(1)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 loss_fn = nn.MSELoss()
 max_epochs = 64

@@ -132,12 +132,9 @@ val_set = BearCarDataset(data_dir / "labels_val.csv", img_dir)
 train_dataloader = DataLoader(train_set, batch_size=128, shuffle=True)
 val_dataloader = DataLoader(val_set, batch_size=128)
 # Create directory for saving trained models
-model_dir = data_dir / "models"
+model_dir = data_dir / "models" / arch_name
 model_dir.mkdir(parents=True, exist_ok=True)
 # Instantiate model and config training
-# model = models.mobilenet_v3_small(weights=None, num_classes=2).to(
-#     DEVICE
-# )  # choose the architecture class from cnn_network.py
 try:
     model_class = getattr(models, arch_name)
     model = model_class(weights=None, num_classes=2).to(DEVICE)
@@ -171,7 +168,7 @@ for ep in range(max_epochs):
     if ep_val_loss < best_loss:
         best_loss = ep_val_loss
         since_best_counter = 0  # Reset counter if validation loss improved
-        best_model_path = data_dir / "best_model.pth"
+        best_model_path = model_dir / "best_model.pth"
         try:
             best_model_path.unlink()
             print("Last best model file has been deleted successfully.")

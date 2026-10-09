@@ -19,6 +19,12 @@ from components.driver import Driver
 # Parse arguments
 parser = argparse.ArgumentParser(description="BearCar Driver Selection")
 parser.add_argument(
+    "--arch",
+    type=str,
+    default="mobilenet_v3_small",
+    help="Name of the model architecture (e.g., mobilenet_v3_small)",
+)
+parser.add_argument(
     "--model",
     type=str,
     default=None,
@@ -38,9 +44,10 @@ with open(params_file_path, "r") as file:
 # Load autopilot model if provided
 autopilot = None
 if args.model:
-    model_path = bc_dir.joinpath("models", args.model + ".pth")
+    model_path = bc_dir.joinpath("models", args.arch, args.model + ".pth")
     # autopilot = BearNet()
-    autopilot = models.mobilenet_v3_small(weights=None, num_classes=2)
+    autopilot = getattr(models, args.arch)(weights=None, num_classes=2)
+    # autopilot = models.mobilenet_v3_small(weights=None, num_classes=2)
     autopilot.load_state_dict(
         torch.load(
             model_path,
@@ -49,7 +56,7 @@ if args.model:
         )
     )
     autopilot.eval()  # freeze weights
-    print("!!!\nAUTOPILOT ON DUTY\n!!!")
+    print(f"!!!\nAUTOPILOT {model_path} ON DUTY\n!!!")
 else:
     print("~~~\nGet ready, Human!\n~~~")
 print("Place BearCar on the ground and enjoy your ride...\n")

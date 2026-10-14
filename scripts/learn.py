@@ -1,6 +1,7 @@
+from argparse import ArgumentParser
 from pathlib import Path
+import shutil
 
-# import os
 import sys
 import pandas as pd
 import numpy as np
@@ -78,15 +79,30 @@ def validate(dataloader, model, loss_fn):
 
 
 # SETUP
-# Pass in data directory and model architecture name as CLI argument, e.g. python train.py 2025-12-13-14-15 mobilenet_v3_small
-if len(sys.argv) < 2 or len(sys.argv) > 3:
-    print("Usage: python learn.py <datetime> [architecture]")
-    sys.exit(1)  # exit with an error code
-ymdhm = sys.argv[1]  # year-month-date-hour-minute
-if len(sys.argv) == 3:
-    arch_name = sys.argv[2]
-else:
-    arch_name = "mobilenet_v3_small"
+# # Pass in data directory and model architecture name as CLI argument, e.g. python train.py 2025-12-13-14-15 mobilenet_v3_small
+# if len(sys.argv) < 2 or len(sys.argv) > 3:
+#     print("Usage: python learn.py <datetime> [architecture]")
+#     sys.exit(1)  # exit with an error code
+# ymdhm = sys.argv[1]  # year-month-date-hour-minute
+# if len(sys.argv) == 3:
+#     arch_name = sys.argv[2]
+# else:
+#     arch_name = "mobilenet_v3_small"
+# Parse arguments
+parser = ArgumentParser(description="Autopilot Trainer Configs")
+parser.add_argument(
+    "--data_dir",
+    type=str,
+    default=None,
+    help="Name or path of the data directory (e.g. 2001-02-03-04-05 or year-month-date-hour-minute)",
+)
+parser.add_argument(
+    "--arch",
+    type=str,
+    default="mobilenet_v3_small",
+    help="Name of the model architecture (e.g., mobilenet_v3_small)",
+)
+args = parser.parse_args()
 # Designate processing unit for CNN training
 DEVICE = (
     "cuda"
@@ -97,7 +113,8 @@ DEVICE = (
 )
 print(f"Using {DEVICE} device")
 # Instantiate dataset
-data_dir = Path(__file__).resolve().parent.parent / "data" / ymdhm
+# data_dir = Path(__file__).resolve().parent.parent / "data" / ymdhm
+data_dir = Path(__file__).resolve().parent.parent / "data" / args.data_dir
 annotations_path = data_dir / "labels.csv"
 # Split train/val (90:10)
 anno_df = pd.read_csv(
@@ -132,14 +149,19 @@ val_set = BearCarDataset(data_dir / "labels_val.csv", img_dir)
 train_dataloader = DataLoader(train_set, batch_size=128, shuffle=True)
 val_dataloader = DataLoader(val_set, batch_size=128)
 # Create directory for saving trained models
-model_dir = data_dir / "models" / arch_name
+# model_dir = data_dir / "models" / arch_name
+model_dir = data_dir / "models" / args.arch
+if model_dir.exists() and model_dir.is_dir():
+    shutil.rmtree(model_dir)
 model_dir.mkdir(parents=True, exist_ok=True)
 # Instantiate model and config training
 try:
-    model_class = getattr(models, arch_name)
+    # model_class = getattr(models, arch_name)
+    model_class = getattr(models, args.arch)
     model = model_class(weights=None, num_classes=2).to(DEVICE)
 except AttributeError:
-    print(f"Error: '{arch_name}' is not a valid architecture in torchvision.models.")
+    # print(f"Error: '{arch_name}' is not a valid architecture in torchvision.models.")
+    print(f"Error: '{args.arch}' is not a valid architecture in torchvision.models.")
     sys.exit(1)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 loss_fn = nn.MSELoss()

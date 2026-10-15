@@ -118,6 +118,6 @@ except KeyboardInterrupt:
     print("\nShutdown signal received.")
 finally:
     picam.stop()
-    if image_dir.is_dir() and not label_path.exists():
-        shutil.rmtree(image_dir)
+    if image_dir.parent.is_dir() and not label_path.exists():
+        shutil.rmtree(image_dir.parent)
         print("\nNo data collected, data dir deleted.")

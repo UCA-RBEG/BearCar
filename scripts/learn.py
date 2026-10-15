@@ -79,15 +79,12 @@ def validate(dataloader, model, loss_fn):
 
 
 # SETUP
-# # Pass in data directory and model architecture name as CLI argument, e.g. python train.py 2025-12-13-14-15 mobilenet_v3_small
-# if len(sys.argv) < 2 or len(sys.argv) > 3:
-#     print("Usage: python learn.py <datetime> [architecture]")
-#     sys.exit(1)  # exit with an error code
-# ymdhm = sys.argv[1]  # year-month-date-hour-minute
-# if len(sys.argv) == 3:
-#     arch_name = sys.argv[2]
-# else:
-#     arch_name = "mobilenet_v3_small"
+# Params
+BATCH_SIZE = 64
+LEARNING_RATE = 3e-4
+MAX_EPOCHS = 128
+PATIENCE = 5
+
 # Parse arguments
 parser = ArgumentParser(description="Autopilot Trainer Configs")
 parser.add_argument(
@@ -146,8 +143,8 @@ val_df.to_csv(
 img_dir = data_dir / "images"
 train_set = BearCarDataset(data_dir / "labels_train.csv", img_dir)
 val_set = BearCarDataset(data_dir / "labels_val.csv", img_dir)
-train_dataloader = DataLoader(train_set, batch_size=128, shuffle=True)
-val_dataloader = DataLoader(val_set, batch_size=128)
+train_dataloader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)
+val_dataloader = DataLoader(val_set, batch_size=BATCH_SIZE)
 # Create directory for saving trained models
 # model_dir = data_dir / "models" / arch_name
 model_dir = data_dir / "models" / args.arch
@@ -163,10 +160,14 @@ except AttributeError:
     # print(f"Error: '{arch_name}' is not a valid architecture in torchvision.models.")
     print(f"Error: '{args.arch}' is not a valid architecture in torchvision.models.")
     sys.exit(1)
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+# optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+optimizer = torch.optim.AdamW(
+    params=model.parameters(),
+    lr=LEARNING_RATE,
+    betas=(0.9, 0.999),
+    eps=1e-8,
+)
 loss_fn = nn.MSELoss()
-max_epochs = 64
-patience = 5
 best_loss = float("inf")  # best loss on validation data
 since_best_counter = 0
 train_losses = []
@@ -175,7 +176,7 @@ val_losses = []
 
 # LOOP
 # Optimize model
-for ep in range(max_epochs):
+for ep in range(MAX_EPOCHS):
     print(f"Epoch {ep + 1}\n-------------------------------")
     ep_train_loss = train(train_dataloader, model, loss_fn, optimizer)
     ep_val_loss = validate(val_dataloader, model, loss_fn)
@@ -203,7 +204,7 @@ for ep in range(max_epochs):
     else:
         since_best_counter += 1
         print(f"{since_best_counter} epochs since best model")
-        if since_best_counter >= patience:
+        if since_best_counter >= PATIENCE:
             print("Early stopping triggered!")
             break
 print("Optimize Done!")  # debug

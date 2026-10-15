@@ -35,9 +35,9 @@ args = parser.parse_args()
 # Define paths
 bc_dir = Path(__file__).parents[1]
 data_dir = bc_dir.joinpath("data")
-image_dir = str(data_dir.joinpath(datetime.now().strftime("%Y-%m-%d-%H-%M"), "images"))
+image_dir = data_dir.joinpath(datetime.now().strftime("%Y-%m-%d-%H-%M"), "images")
 Path(image_dir).mkdir(parents=True, exist_ok=True)
-label_path = str(Path(image_dir).parent.joinpath("labels.csv"))
+label_path = Path(image_dir).parent.joinpath("labels.csv")
 # Load configs
 params_file_path = bc_dir.joinpath("scripts", "components", "configs.json")
 with open(params_file_path, "r") as file:

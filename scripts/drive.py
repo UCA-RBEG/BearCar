@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+import shutil
 from time import sleep, time
 from datetime import datetime
 import csv
@@ -111,6 +112,12 @@ try:
         #     break
         sleep(1 / drive_rate)  # see configs.json for FPS
 except KeyboardInterrupt:
+    if image_dir.is_dir() and not label_path.exists():
+        shutil.rmtree(image_dir)
+        print("\nNo data collected, data dir deleted.")
     print("\nShutdown signal received.")
 finally:
     picam.stop()
+    if image_dir.is_dir() and not label_path.exists():
+        shutil.rmtree(image_dir)
+        print("\nNo data collected, data dir deleted.")

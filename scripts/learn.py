@@ -80,8 +80,8 @@ def validate(dataloader, model, loss_fn):
 
 # SETUP
 # Params
-BATCH_SIZE = 64
-LEARNING_RATE = 3e-4
+BATCH_SIZE = 128
+LEARNING_RATE = 1e-4
 MAX_EPOCHS = 128
 PATIENCE = 5
 
@@ -110,7 +110,6 @@ DEVICE = (
 )
 print(f"Using {DEVICE} device")
 # Instantiate dataset
-# data_dir = Path(__file__).resolve().parent.parent / "data" / ymdhm
 data_dir = Path(__file__).resolve().parent.parent / "data" / args.data_dir
 annotations_path = data_dir / "labels.csv"
 # Split train/val (90:10)
@@ -146,10 +145,10 @@ val_set = BearCarDataset(data_dir / "labels_val.csv", img_dir)
 train_dataloader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)
 val_dataloader = DataLoader(val_set, batch_size=BATCH_SIZE)
 # Create directory for saving trained models
-# model_dir = data_dir / "models" / arch_name
 model_dir = data_dir / "models" / args.arch
 if model_dir.exists() and model_dir.is_dir():
-    shutil.rmtree(model_dir)
+    shutil.rmtree(model_dir)  # TODO: ask input to delete.
+    print("Old model directory deleted.")
 model_dir.mkdir(parents=True, exist_ok=True)
 # Instantiate model and config training
 try:

@@ -85,7 +85,7 @@ try:
         messenger.out_msg = f"{mode},{st_pw},{th_pw}\n"
         action = [st_val, th_val]
         if mode == "r":
-            cv.imwrite(image_dir + "/" + str(frame_counts) + ".jpg", frame)
+            cv.imwrite(image_dir.joinpath(str(frame_counts) + ".jpg"), frame)
             label = [str(frame_counts) + ".jpg"] + action
             with open(label_path, "a+", newline="") as f:
                 writer = csv.writer(f)

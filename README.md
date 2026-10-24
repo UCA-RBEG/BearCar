@@ -1,9 +1,9 @@
 # BearCar
 
-![bearcar_portrait](https://ucaengineeringphysics.github.io/bearcar_docs/images/bearcar_annotate.png)
+![bearcar_portrait](https://uca-rbeg.github.io/bearcar_docs/images/bearcar_annotate.png)
 
 BearCar is an autonomous driving platform based on an 1:16 RC car and a Raspberry Pi SBC.
-Visit [documentations](https://ucaengineeringphysics.github.io/bearcar_docs/) for more details.
+Visit [documentations](https://uca-rbeg.github.io/bearcar_docs/) for more details.
 
 > [!IMPORTANT]
 > This project is strongly inspired by the
@@ -28,6 +28,8 @@ cd ~/BearCar
 ### Hook Up the Gamepad
 
 Plug in USB receiver or connect via bluetooth.
+> [!TIP]
+> PS4 controller
 
 ### Have Fun Driving
 

@@ -16,7 +16,6 @@ from torchvision.io import decode_image
 import matplotlib.pyplot as plt
 
 
-# Define custom dataset
 class BearCarDataset(Dataset):
     """
     Customized dataset
@@ -41,8 +40,6 @@ class BearCarDataset(Dataset):
         )
         return image, target_steering, target_throttle
 
-
-# Define training process
 def train(dataloader, model, loss_fn, optimizer):
     """
     training function for 1 epoch
@@ -65,8 +62,6 @@ def train(dataloader, model, loss_fn, optimizer):
         ep_loss = (ep_loss * i + batch_loss.item()) / (i + 1)
     return ep_loss
 
-
-# Define validation process
 def validate(dataloader, model, loss_fn):
     model.eval()
     ep_loss = 0.0
@@ -101,7 +96,7 @@ parser.add_argument(
     help="Name of the model architecture (e.g., mobilenet_v3_small)",
 )
 args = parser.parse_args()
-# Designate processing unit for CNN training
+# Designate processing unit
 DEVICE = (
     "cuda"
     if torch.cuda.is_available()
@@ -113,15 +108,15 @@ print(f"Using {DEVICE} device")
 # Instantiate dataset
 data_dir = Path(__file__).resolve().parent.parent / "data" / args.data_dir
 annotations_path = data_dir / "labels.csv"
-# Split train/val (90:10)
+# Split train/val (85:15)
 anno_df = pd.read_csv(
     annotations_path,
     header=None,
     names=["image_id", "steering_value", "throttle_value"],
 )
 val_ids = np.arange(
-    int(len(anno_df) / 2) - int(len(anno_df) * 0.1),  # lower bound
-    int(len(anno_df) / 2) + int(len(anno_df) * 0.1),  # upper bound
+    int(len(anno_df) / 2) - int(len(anno_df) * 0.075),  # lower bound
+    int(len(anno_df) / 2) + int(len(anno_df) * 0.075),  # upper bound
 )
 val_df = anno_df.iloc[val_ids]
 train_df = anno_df.drop(val_ids)

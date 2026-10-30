@@ -1,3 +1,5 @@
+from components.custom_archs import create_custom_model
+
 from argparse import ArgumentParser
 from pathlib import Path
 import shutil
@@ -8,7 +10,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
-import torchvision.models as models
+import torchvision.models as tvmodels
 from torchvision.transforms import v2
 from torchvision.io import decode_image
 import matplotlib.pyplot as plt
@@ -161,14 +163,16 @@ if model_dir.exists() and model_dir.is_dir():
 model_dir.mkdir(parents=True, exist_ok=True)
 # Instantiate model and config training
 try:
-    # model_class = getattr(models, arch_name)
-    model_class = getattr(models, args.arch)
+    model_class = getattr(tvmodels, args.arch)
     model = model_class(weights=None, num_classes=2).to(DEVICE)
 except AttributeError:
-    # print(f"Error: '{arch_name}' is not a valid architecture in torchvision.models.")
-    print(f"Error: '{args.arch}' is not a valid architecture in torchvision.models.")
-    sys.exit(1)
-# optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    print(f"{args.arch} is not found in torchvision's model collections.")
+    try:
+        model = create_custom_model(args.arch)
+    except ValueError:
+        print(f"{args.arch} is not registered as a custom architecture.")
+        sys.exit(1)
+# Config model optimizer
 optimizer = torch.optim.AdamW(
     params=model.parameters(),
     lr=LEARNING_RATE,

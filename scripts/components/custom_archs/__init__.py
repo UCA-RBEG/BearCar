@@ -6,7 +6,7 @@ arch_registry = {
     "donkeynet": DonkeyNet,
 }
 
-def create_model(arch: str, *args, **kwargs):
+def create_custom_model(arch: str, *args, **kwargs):
     model_constructor = arch_registry.get(arch)
     if not model_constructor:
         raise ValueError(f"Model architecture: {arch} is not registered.")

@@ -128,16 +128,26 @@ val_df = val_df.reset_index(drop=True)
 train_df = train_df.reset_index(drop=True)
 print(f"train size: {len(train_df)}, validation size: {len(val_df)}")
 # Generate train/val annotation files
-train_df.to_csv(
-    data_dir / "labels_train.csv",
-    index=False,
-    header=False,
-)
-val_df.to_csv(
-    data_dir / "labels_val.csv",
-    index=False,
-    header=False,
-)
+anno_train_path = data_dir / "labels_train.csv",
+if not anno_train_path.exists():
+    train_df.to_csv(
+        data_dir / "labels_train.csv",
+        index=False,
+        header=False,
+    )
+    print(f"Training annotations file saved: {anno_train_path}")
+else:
+    print(f"Training annotations file already exists: {anno_train_path}")
+anno_val_path = data_dir / "labels_val.csv",
+if not anno_val_path.exists():
+    val_df.to_csv(
+        data_dir / "labels_val.csv",
+        index=False,
+        header=False,
+    )
+    print(f"Validation annotations file saved: {anno_val_path}")
+else:
+    print(f"Validation annotations file already exists: {anno_val_path}")
 # Create dataset and dataloader
 img_dir = data_dir / "images"
 train_set = BearCarDataset(data_dir / "labels_train.csv", img_dir)

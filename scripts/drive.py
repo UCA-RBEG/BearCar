@@ -37,7 +37,7 @@ bc_dir = Path(__file__).parents[1]
 data_dir = bc_dir.joinpath("data")
 image_dir = data_dir.joinpath(datetime.now().strftime("%Y-%m-%d-%H-%M"), "images")
 Path(image_dir).mkdir(parents=True, exist_ok=True)
-label_path = Path(image_dir).parent.joinpath("labels.csv")
+annotations_path = Path(image_dir).parent.joinpath("annotations.csv")
 # Load configs
 params_file_path = bc_dir.joinpath("scripts", "components", "configs.json")
 with open(params_file_path, "r") as file:
@@ -84,12 +84,12 @@ try:
         mode, st_val, th_val, st_pw, th_pw = driver.process_event(params, frame=frame)
         messenger.out_msg = f"{mode},{st_pw},{th_pw}\n"
         action = [st_val, th_val]
-        if mode == "r":
+        if mode == "r":  # record data
             cv.imwrite(image_dir.joinpath(str(frame_counts) + ".jpg"), frame)
-            label = [str(frame_counts) + ".jpg"] + action
-            with open(label_path, "a+", newline="") as f:
+            annotation = [str(frame_counts) + ".jpg"] + action
+            with open(annotations_path, "a+", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow(label)
+                writer.writerow(annotation)
             record_counts += 1
             # print(f"recorded frame counts: {record_counts}")  # debug
             if record_counts == params["record_cap"]:  # pause recording if max reached
@@ -112,12 +112,12 @@ try:
         #     break
         sleep(1 / drive_rate)  # see configs.json for FPS
 except KeyboardInterrupt:
-    if image_dir.is_dir() and not label_path.exists():
+    if image_dir.is_dir() and not annotations_path.exists():
         shutil.rmtree(image_dir)
         print("\nNo data collected, data dir deleted.")
     print("\nShutdown signal received.")
 finally:
     picam.stop()
-    if image_dir.parent.is_dir() and not label_path.exists():
+    if image_dir.parent.is_dir() and not annotations_path.exists():
         shutil.rmtree(image_dir.parent)
         print("\nNo data collected, data dir deleted.")

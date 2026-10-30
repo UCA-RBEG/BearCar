@@ -84,7 +84,6 @@ BATCH_SIZE = 128
 LEARNING_RATE = 1e-4
 MAX_EPOCHS = 128
 PATIENCE = 5
-
 # Parse arguments
 parser = ArgumentParser(description="Autopilot Trainer Configs")
 parser.add_argument(

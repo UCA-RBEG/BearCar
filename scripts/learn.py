@@ -126,7 +126,7 @@ val_df = val_df.reset_index(drop=True)
 train_df = train_df.reset_index(drop=True)
 print(f"train size: {len(train_df)}, validation size: {len(val_df)}")
 # Generate train/val annotation files
-anno_train_path = data_dir / "annotaions_train.csv"
+anno_train_path = data_dir / "annotations_train.csv"
 if not anno_train_path.exists():
     train_df.to_csv(
         data_dir / "annotations_train.csv",

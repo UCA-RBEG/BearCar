@@ -124,7 +124,7 @@ val_df = anno_df.iloc[val_ids]
 train_df = anno_df.drop(val_ids)
 val_df = val_df.reset_index(drop=True)
 train_df = train_df.reset_index(drop=True)
-print(f"train size: {len(train_df)}, validation size: {len(val_df)}")
+print(f"\ntrain size: {len(train_df)}, validation size: {len(val_df)}")
 # Generate train/val annotation files
 anno_train_path = data_dir / "annotations_train.csv"
 if not anno_train_path.exists():
@@ -156,18 +156,20 @@ val_dataloader = DataLoader(val_set, batch_size=BATCH_SIZE)
 model_dir = data_dir / "models" / args.arch
 if model_dir.exists() and model_dir.is_dir():
     shutil.rmtree(model_dir)  # TODO: ask input to delete.
-    print("Old model directory deleted.")
+    print("\nOld model directory deleted.")
 model_dir.mkdir(parents=True, exist_ok=True)
 # Instantiate model and config training
 try:
     model_class = getattr(tvmodels, args.arch)
     model = model_class(weights=None, num_classes=2).to(DEVICE)
+    print(f"\nFound torchvision model: {args.arch}")
 except AttributeError:
     print(f"{args.arch} is not found in torchvision's model collections.")
     try:
         model = create_custom_model(args.arch).to(DEVICE)
+        print(f"\nCustom model: {args.arch} registered.")
     except ValueError:
-        print(f"{args.arch} is not registered as a custom architecture.")
+        print(f"Custom model: {args.arch} is not registered.")
         sys.exit(1)
 # Config model optimizer
 optimizer = torch.optim.AdamW(
@@ -179,8 +181,8 @@ optimizer = torch.optim.AdamW(
 loss_fn = nn.MSELoss()
 best_loss = float("inf")  # best loss on validation data
 since_best_counter = 0
-train_losses = []
-val_losses = []
+losses_train = []
+losses_val = []
 
 
 # LOOP
@@ -192,8 +194,8 @@ for ep in range(MAX_EPOCHS):
     print(
         f"Epoch {ep + 1} training loss: {ep_train_loss}, validation loss: {ep_val_loss}"
     )
-    train_losses.append(ep_train_loss)
-    val_losses.append(ep_val_loss)
+    losses_train.append(ep_train_loss)
+    losses_val.append(ep_val_loss)
     model_name = f"ep{ep + 1}-mse{ep_val_loss:.4f}"
     torch.save(model.state_dict(), model_dir / f"{model_name}.pth")
     # Early stopping
@@ -218,11 +220,16 @@ for ep in range(MAX_EPOCHS):
             break
 print("Optimize Done!")  # debug
 # Graph training process
-plt.plot(range(len(train_losses)), train_losses, "b--", label="Training")
-plt.plot(range(len(val_losses)), val_losses, "orange", label="Validation")
+plt.plot(range(len(losses_train)), losses_train, "b--", label="Training")
+plt.plot(range(len(losses_val)), losses_val, "orange", label="Validation")
 plt.grid(True)
 plt.xlabel("Epoch")
 plt.ylabel("MSE Loss")
 plt.legend()
-plt.title(model_name)
+plt.title(f"{args.arch} Losses")
 plt.savefig(model_dir / "learning_curve.png")
+# Save losses
+with open(model_dir / "losses_train.txt", "w") as f:
+    f.writelines(f"{item}\n" for item in losses_train)
+with open(model_dir / "losses_val.txt", "w") as f:
+    f.writelines(f"{item}\n" for item in losses_val)

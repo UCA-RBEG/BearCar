@@ -7,9 +7,9 @@ import csv
 import json
 import cv2 as cv
 import torch
-from torchvision import models
+import torchvision.models as tvmodels
 
-from components.autopilot_architectures.bearnet import BearNet
+from components.custom_archs import create_custom_model
 from components.camera import ThreadedCamera
 from components.messenger import ThreadedMessenger
 from components.driver import Driver
@@ -46,9 +46,15 @@ with open(params_file_path, "r") as file:
 autopilot = None
 if args.model:
     model_path = bc_dir.joinpath("models", args.arch, args.model + ".pth")
-    # autopilot = BearNet()
-    autopilot = getattr(models, args.arch)(weights=None, num_classes=2)
-    # autopilot = models.mobilenet_v3_small(weights=None, num_classes=2)
+    try:
+        autopilot = getattr(tvmodels, args.arch)(weights=None, num_classes=2)
+    except AttributeError:
+        print(f"{args.arch} is not found in torchvision's model collections.")
+        try:
+            autopilot = create_custom_model(args.arch)
+        except ValueError:
+            print(f"{args.arch} is not registered as a custom architecture.")
+            sys.exit(1)
     autopilot.load_state_dict(
         torch.load(
             model_path,
@@ -61,7 +67,7 @@ if args.model:
 else:
     print("~~~\nGet ready, Human!\n~~~")
 print("Place BearCar on the ground and enjoy your ride...\n")
-sleep(1)  # Let the driver be ready
+# sleep(1)  # Let the driver be ready
 # Init components
 picam = ThreadedCamera(params=params)
 messenger = ThreadedMessenger(port="/dev/ttyACM0", baudrate=115200)

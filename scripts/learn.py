@@ -21,22 +21,22 @@ class BearCarDataset(Dataset):
     Customized dataset
     """
 
-    def __init__(self, labels_file_path, img_dir):
-        self.labels_df = pd.read_csv(labels_file_path, header=None)
+    def __init__(self, annotations_file_path, img_dir):
+        self.annotations_df = pd.read_csv(annotations_file_path, header=None)
         self.img_dir = img_dir
         self.trans_in = v2.Compose([v2.ToDtype(torch.float32, scale=True)])
 
     def __len__(self):
-        return len(self.labels_df)
+        return len(self.annotations_df)
 
     def __getitem__(self, idx):
-        img_path = self.img_dir / self.labels_df.iloc[idx, 0]
+        img_path = self.img_dir / self.annotations_df.iloc[idx, 0]
         image = self.trans_in(decode_image(img_path))
         target_steering = torch.as_tensor(
-            self.labels_df.iloc[idx, 1], dtype=torch.float32
+            self.annotations_df.iloc[idx, 1], dtype=torch.float32
         )
         target_throttle = torch.as_tensor(
-            self.labels_df.iloc[idx, 2], dtype=torch.float32
+            self.annotations_df.iloc[idx, 2], dtype=torch.float32
         )
         return image, target_steering, target_throttle
 
@@ -107,10 +107,10 @@ DEVICE = (
 print(f"Using {DEVICE} device")
 # Instantiate dataset
 data_dir = Path(__file__).resolve().parent.parent / "data" / args.data_dir
-annotations_path = data_dir / "labels.csv"
+annotations_file_path = data_dir / "annotations.csv"
 # Split train/val (85:15)
 anno_df = pd.read_csv(
-    annotations_path,
+    annotations_file_path,
     header=None,
     names=["image_id", "steering_value", "throttle_value"],
 )
@@ -124,20 +124,20 @@ val_df = val_df.reset_index(drop=True)
 train_df = train_df.reset_index(drop=True)
 print(f"train size: {len(train_df)}, validation size: {len(val_df)}")
 # Generate train/val annotation files
-anno_train_path = data_dir / "labels_train.csv",
+anno_train_path = data_dir / "annotaions_train.csv",
 if not anno_train_path.exists():
     train_df.to_csv(
-        data_dir / "labels_train.csv",
+        data_dir / "annotations_train.csv",
         index=False,
         header=False,
     )
     print(f"Training annotations file saved: {anno_train_path}")
 else:
     print(f"Training annotations file already exists: {anno_train_path}")
-anno_val_path = data_dir / "labels_val.csv",
+anno_val_path = data_dir / "annotations_val.csv",
 if not anno_val_path.exists():
     val_df.to_csv(
-        data_dir / "labels_val.csv",
+        data_dir / "annotations_val.csv",
         index=False,
         header=False,
     )
@@ -146,8 +146,8 @@ else:
     print(f"Validation annotations file already exists: {anno_val_path}")
 # Create dataset and dataloader
 img_dir = data_dir / "images"
-train_set = BearCarDataset(data_dir / "labels_train.csv", img_dir)
-val_set = BearCarDataset(data_dir / "labels_val.csv", img_dir)
+train_set = BearCarDataset(data_dir / "annotations_train.csv", img_dir)
+val_set = BearCarDataset(data_dir / "annotations_val.csv", img_dir)
 train_dataloader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)
 val_dataloader = DataLoader(val_set, batch_size=BATCH_SIZE)
 # Create directory for saving trained models

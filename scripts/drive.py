@@ -37,7 +37,7 @@ bc_dir = Path(__file__).parents[1]
 data_dir = bc_dir.joinpath("data")
 image_dir = data_dir.joinpath(datetime.now().strftime("%Y-%m-%d-%H-%M"), "images")
 Path(image_dir).mkdir(parents=True, exist_ok=True)
-annotations_path = Path(image_dir).parent.joinpath("annotations.csv")
+annotations_file_path = Path(image_dir).parent.joinpath("annotations.csv")
 # Load configs
 params_file_path = bc_dir.joinpath("scripts", "components", "configs.json")
 with open(params_file_path, "r") as file:
@@ -93,7 +93,7 @@ try:
         if mode == "r":  # record data
             cv.imwrite(image_dir.joinpath(str(frame_counts) + ".jpg"), frame)
             annotation = [str(frame_counts) + ".jpg"] + action
-            with open(annotations_path, "a+", newline="") as f:
+            with open(annotations_file_path, "a+", newline="") as f:
                 writer = csv.writer(f)
                 writer.writerow(annotation)
             record_counts += 1
@@ -118,12 +118,12 @@ try:
         #     break
         sleep(1 / drive_rate)  # see configs.json for FPS
 except KeyboardInterrupt:
-    if image_dir.is_dir() and not annotations_path.exists():
+    if image_dir.is_dir() and not annotations_file_path.exists():
         shutil.rmtree(image_dir)
         print("\nNo data collected, data dir deleted.")
     print("\nShutdown signal received.")
 finally:
     picam.stop()
-    if image_dir.parent.is_dir() and not annotations_path.exists():
+    if image_dir.parent.is_dir() and not annotations_file_path.exists():
         shutil.rmtree(image_dir.parent)
         print("\nNo data collected, data dir deleted.")

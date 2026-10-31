@@ -40,6 +40,7 @@ class BearCarDataset(Dataset):
         )
         return image, target_steering, target_throttle
 
+
 def train(dataloader, model, loss_fn, optimizer):
     """
     training function for 1 epoch
@@ -61,6 +62,7 @@ def train(dataloader, model, loss_fn, optimizer):
         )
         ep_loss = (ep_loss * i + batch_loss.item()) / (i + 1)
     return ep_loss
+
 
 def validate(dataloader, model, loss_fn):
     model.eval()
@@ -124,7 +126,7 @@ val_df = val_df.reset_index(drop=True)
 train_df = train_df.reset_index(drop=True)
 print(f"train size: {len(train_df)}, validation size: {len(val_df)}")
 # Generate train/val annotation files
-anno_train_path = data_dir / "annotaions_train.csv",
+anno_train_path = data_dir / "annotaions_train.csv"
 if not anno_train_path.exists():
     train_df.to_csv(
         data_dir / "annotations_train.csv",
@@ -134,7 +136,7 @@ if not anno_train_path.exists():
     print(f"Training annotations file saved: {anno_train_path}")
 else:
     print(f"Training annotations file already exists: {anno_train_path}")
-anno_val_path = data_dir / "annotations_val.csv",
+anno_val_path = data_dir / "annotations_val.csv"
 if not anno_val_path.exists():
     val_df.to_csv(
         data_dir / "annotations_val.csv",
@@ -163,7 +165,7 @@ try:
 except AttributeError:
     print(f"{args.arch} is not found in torchvision's model collections.")
     try:
-        model = create_custom_model(args.arch)
+        model = create_custom_model(args.arch).to(DEVICE)
     except ValueError:
         print(f"{args.arch} is not registered as a custom architecture.")
         sys.exit(1)

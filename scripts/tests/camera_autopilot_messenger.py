@@ -7,7 +7,7 @@ import torch
 from components.camera import ThreadedCamera
 from components.messenger import ThreadedMessenger
 from components.driver import Driver
-from components.autopilot_architectures.bearnet import BearNet
+from components.custom_archs.bearnet import BearNet
 
 
 # SAFETY CHECK

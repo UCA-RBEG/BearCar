@@ -58,14 +58,16 @@ class Driver:
                             self.mode = "n"
                     print(f"Paused: {self.is_paused}")
                 elif self.gamepad.get_button(params["record_btn"]):
-                    if not self.autopilot:  # only work for human driver
-                        if not self.is_paused:  # only work in normal mode
-                            self.is_recording = not self.is_recording
-                            if self.is_recording:
-                                self.mode = "r"
-                            else:
-                                self.mode = "n"
-                            print(f"Recording: {self.is_recording}")
+                    if (
+                        not self.autopilot and not self.is_paused
+                    ):  # only work for human driver normal mode
+                        # if not self.is_paused:  # only work in normal mode
+                        self.is_recording = not self.is_recording
+                        if self.is_recording:
+                            self.mode = "r"
+                        else:
+                            self.mode = "n"
+                        print(f"Recording: {self.is_recording}")
             elif e.type == pygame.JOYAXISMOTION:
                 if not self.autopilot:  # human input from gamepad
                     st_ax_val = self.gamepad.get_axis(params["steering_axis"])

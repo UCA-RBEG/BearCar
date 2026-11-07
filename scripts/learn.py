@@ -1,62 +1,46 @@
-import os
+from components.custom_archs import create_custom_model
+
+from argparse import ArgumentParser
+from pathlib import Path
+import shutil
+
 import sys
 import pandas as pd
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
+import torchvision.models as tvmodels
 from torchvision.transforms import v2
 from torchvision.io import decode_image
 import matplotlib.pyplot as plt
-from components.autopilot_architectures.bearnet import BearNet
 
 
-# Define custom dataset
 class BearCarDataset(Dataset):
     """
     Customized dataset
     """
 
-    def __init__(self, labels_file_path, img_dir):
-        self.labels_df = pd.read_csv(labels_file_path, header=None)
+    def __init__(self, annotations_file_path, img_dir):
+        self.annotations_df = pd.read_csv(annotations_file_path, header=None)
         self.img_dir = img_dir
         self.trans_in = v2.Compose([v2.ToDtype(torch.float32, scale=True)])
 
     def __len__(self):
-        return len(self.labels_df)
+        return len(self.annotations_df)
 
     def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, self.labels_df.iloc[idx, 0])
+        img_path = self.img_dir / self.annotations_df.iloc[idx, 0]
         image = self.trans_in(decode_image(img_path))
         target_steering = torch.as_tensor(
-            self.labels_df.iloc[idx, 1], dtype=torch.float32
+            self.annotations_df.iloc[idx, 1], dtype=torch.float32
         )
         target_throttle = torch.as_tensor(
-            self.labels_df.iloc[idx, 2], dtype=torch.float32
+            self.annotations_df.iloc[idx, 2], dtype=torch.float32
         )
         return image, target_steering, target_throttle
 
 
-# SETUP
-# Pass in data directory name as CLI argument
-# e.g. python train.py 2025-12-13-14-15
-if len(sys.argv) != 2:
-    print("Training script needs data! Please provide date and time!")
-    sys.exit(1)  # exit with an error code
-else:
-    data_datetime = sys.argv[1]
-# Designate processing unit for CNN training
-DEVICE = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps"
-    if torch.backends.mps.is_available()
-    else "cpu"
-)
-print(f"Using {DEVICE} device")
-
-
-# Define training process
 def train(dataloader, model, loss_fn, optimizer):
     """
     training function for 1 epoch
@@ -80,7 +64,6 @@ def train(dataloader, model, loss_fn, optimizer):
     return ep_loss
 
 
-# Define validation process
 def validate(dataloader, model, loss_fn):
     model.eval()
     ep_loss = 0.0
@@ -94,106 +77,159 @@ def validate(dataloader, model, loss_fn):
     return ep_loss
 
 
-# Instantiate dataset
-data_dir = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "data",
-    data_datetime,
+# SETUP
+# Params
+BATCH_SIZE = 128
+LEARNING_RATE = 1e-4
+MAX_EPOCHS = 128
+PATIENCE = 5
+# Parse arguments
+parser = ArgumentParser(description="Autopilot Trainer Configs")
+parser.add_argument(
+    "--data_dir",
+    type=str,
+    default=None,
+    help="Name or path of the data directory (e.g. 2001-02-03-04-05 or year-month-date-hour-minute)",
 )
-raw_labels_file_path = os.path.join(data_dir, "labels.csv")  # the name of the csv file
-# Split train/val (90:10)
-raw_labels_df = pd.read_csv(
-    raw_labels_file_path,
+parser.add_argument(
+    "--arch",
+    type=str,
+    default="bearnet",
+    help="Name of the model architecture (e.g., mobilenet_v3_small)",
+)
+args = parser.parse_args()
+# Designate processing unit
+DEVICE = (
+    "cuda"
+    if torch.cuda.is_available()
+    else "mps"
+    if torch.backends.mps.is_available()
+    else "cpu"
+)
+print(f"Using {DEVICE} device")
+# Instantiate dataset
+data_dir = Path(__file__).resolve().parent.parent / "data" / args.data_dir
+annotations_file_path = data_dir / "annotations.csv"
+# Split train/val (85:15)
+anno_df = pd.read_csv(
+    annotations_file_path,
     header=None,
     names=["image_id", "steering_value", "throttle_value"],
 )
 val_ids = np.arange(
-    int(len(raw_labels_df) / 2) - int(len(raw_labels_df) * 0.1),  # lower bound
-    int(len(raw_labels_df) / 2) + int(len(raw_labels_df) * 0.1),  # upper bound
+    int(len(anno_df) / 2) - int(len(anno_df) * 0.075),  # lower bound
+    int(len(anno_df) / 2) + int(len(anno_df) * 0.075),  # upper bound
 )
-val_df = raw_labels_df.iloc[val_ids]
-train_df = raw_labels_df.drop(val_ids)
+val_df = anno_df.iloc[val_ids]
+train_df = anno_df.drop(val_ids)
 val_df = val_df.reset_index(drop=True)
 train_df = train_df.reset_index(drop=True)
-print(f"train size: {len(train_df)}, validation size: {len(val_df)}")
+print(f"\ntrain size: {len(train_df)}, validation size: {len(val_df)}")
 # Generate train/val annotation files
-train_df.to_csv(
-    os.path.join(data_dir, "labels_train.csv"),
-    index=False,
-    header=False,
-)
-val_df.to_csv(
-    os.path.join(data_dir, "labels_val.csv"),
-    index=False,
-    header=False,
-)
+anno_train_path = data_dir / "annotations_train.csv"
+if not anno_train_path.exists():
+    train_df.to_csv(
+        data_dir / "annotations_train.csv",
+        index=False,
+        header=False,
+    )
+    print(f"Training annotations file saved: {anno_train_path}")
+else:
+    print(f"Training annotations file already exists: {anno_train_path}")
+anno_val_path = data_dir / "annotations_val.csv"
+if not anno_val_path.exists():
+    val_df.to_csv(
+        data_dir / "annotations_val.csv",
+        index=False,
+        header=False,
+    )
+    print(f"Validation annotations file saved: {anno_val_path}")
+else:
+    print(f"Validation annotations file already exists: {anno_val_path}")
 # Create dataset and dataloader
-img_dir = os.path.join(data_dir, "images")
-train_set = BearCarDataset(os.path.join(data_dir, "labels_train.csv"), img_dir)
-val_set = BearCarDataset(os.path.join(data_dir, "labels_val.csv"), img_dir)
-train_dataloader = DataLoader(train_set, batch_size=128, shuffle=True)
-val_dataloader = DataLoader(val_set, batch_size=128)
+img_dir = data_dir / "images"
+train_set = BearCarDataset(data_dir / "annotations_train.csv", img_dir)
+val_set = BearCarDataset(data_dir / "annotations_val.csv", img_dir)
+train_dataloader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)
+val_dataloader = DataLoader(val_set, batch_size=BATCH_SIZE)
 # Create directory for saving trained models
-model_dir = os.path.join(data_dir, "models")
-if not os.path.exists(model_dir):
-    try:
-        os.makedirs(model_dir)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
+model_dir = data_dir / "models" / args.arch
+if model_dir.exists() and model_dir.is_dir():
+    shutil.rmtree(model_dir)  # TODO: ask input to delete.
+    print("\nOld model directory deleted.")
+model_dir.mkdir(parents=True, exist_ok=True)
 # Instantiate model and config training
-model = BearNet().to(DEVICE)  # choose the architecture class from cnn_network.py
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+try:
+    model_class = getattr(tvmodels, args.arch)
+    model = model_class(weights=None, num_classes=2).to(DEVICE)
+    print(f"\nFound torchvision model: {args.arch}")
+except AttributeError:
+    print(f"{args.arch} is not found in torchvision's model collections.")
+    try:
+        model = create_custom_model(args.arch).to(DEVICE)
+        print(f"\nCustom model: {args.arch} registered.")
+    except ValueError:
+        print(f"Custom model: {args.arch} is not registered.")
+        sys.exit(1)
+# Config model optimizer
+optimizer = torch.optim.AdamW(
+    params=model.parameters(),
+    lr=LEARNING_RATE,
+    betas=(0.9, 0.999),
+    eps=1e-8,
+)
 loss_fn = nn.MSELoss()
-max_epochs = 64
-patience = 5
 best_loss = float("inf")  # best loss on validation data
 since_best_counter = 0
-train_losses = []
-val_losses = []
+losses_train = []
+losses_val = []
 
 
 # LOOP
 # Optimize model
-for ep in range(max_epochs):
+for ep in range(MAX_EPOCHS):
     print(f"Epoch {ep + 1}\n-------------------------------")
     ep_train_loss = train(train_dataloader, model, loss_fn, optimizer)
     ep_val_loss = validate(val_dataloader, model, loss_fn)
     print(
         f"Epoch {ep + 1} training loss: {ep_train_loss}, validation loss: {ep_val_loss}"
     )
-    train_losses.append(ep_train_loss)
-    val_losses.append(ep_val_loss)
+    losses_train.append(ep_train_loss)
+    losses_val.append(ep_val_loss)
     model_name = f"ep{ep + 1}-mse{ep_val_loss:.4f}"
-    torch.save(model.state_dict(), os.path.join(model_dir, f"{model_name}.pth"))
+    torch.save(model.state_dict(), model_dir / f"{model_name}.pth")
     # Early stopping
     if ep_val_loss < best_loss:
         best_loss = ep_val_loss
         since_best_counter = 0  # Reset counter if validation loss improved
+        best_model_path = model_dir / "best_model.pth"
         try:
-            os.remove(os.path.join(data_dir, "best_model.pth"))
+            best_model_path.unlink()
             print("Last best model file has been deleted successfully.")
         except FileNotFoundError:
-            print(f"File '{os.path.join(data_dir, 'best_model.pth')}' not found.")
+            print(f"File '{best_model_path}' not found.")
         except Exception as e:
             print(f"Error occurred while deleting the file: {e}")
-        torch.save(model.state_dict(), os.path.join(data_dir, "best_model.pth"))
-        print(
-            f"Best model: {model_name} saved at {os.path.join(data_dir, 'best_model.pth')}"
-        )
+        torch.save(model.state_dict(), best_model_path)
+        print(f"Best model: {model_name} saved at {best_model_path}")
     else:
         since_best_counter += 1
         print(f"{since_best_counter} epochs since best model")
-        if since_best_counter >= patience:
+        if since_best_counter >= PATIENCE:
             print("Early stopping triggered!")
             break
 print("Optimize Done!")  # debug
 # Graph training process
-plt.plot(range(len(train_losses)), train_losses, "b--", label="Training")
-plt.plot(range(len(val_losses)), val_losses, "orange", label="Validation")
+plt.plot(range(len(losses_train)), losses_train, "b--", label="Training")
+plt.plot(range(len(losses_val)), losses_val, "orange", label="Validation")
 plt.grid(True)
 plt.xlabel("Epoch")
 plt.ylabel("MSE Loss")
 plt.legend()
-plt.title(model_name)
-plt.savefig(os.path.join(model_dir, "learning_curve.png"))
+plt.title(f"{args.arch} Losses")
+plt.savefig(model_dir / "learning_curve.png")
+# Save losses
+with open(model_dir / "losses_train.txt", "w") as f:
+    f.writelines(f"{item}\n" for item in losses_train)
+with open(model_dir / "losses_val.txt", "w") as f:
+    f.writelines(f"{item}\n" for item in losses_val)

@@ -40,7 +40,7 @@ try:
             print("---")
             print(f"Processing at {fps:.2f} FPS | Frame shape: {frame.shape}")
             print(f"steering value: {st_val}, throttle_value: {th_val}")
-            print(f"In message (ang_vel_z): {messenger.ang_vel_z}")
+            # print(f"In message (ang_vel_z): {messenger.ang_vel_z}")
             print("Out message: " + messenger.out_msg)
             start_time = time()
         cv.imshow("Camera", cv.flip(frame, -1))  # picam mounted upside down

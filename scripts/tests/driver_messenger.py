@@ -31,7 +31,7 @@ try:
         messenger.out_msg = f"{mode},{st_pw},{th_pw}\n"
         print("---")
         print(f"steering value: {st_val}, throttle_value: {th_val}")
-        print(f"In message (ang_vel_z): {messenger.ang_vel_z}")
+        # print(f"In message (ang_vel_z): {messenger.ang_vel_z}")
         print("Out message: " + messenger.out_msg)
         # 50Hz
         sleep(0.02)

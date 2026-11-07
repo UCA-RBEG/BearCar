@@ -8,8 +8,8 @@ class ThreadedMessenger:
         self.communicator = Serial(port=port, baudrate=baudrate, timeout=0.01)
         print(f"Messenger connected at: {self.communicator.name}\n")
         self.out_msg = "s,1500000,1500000\n"
-        self.in_msg = None
-        self.ang_vel_z = 0.0
+        # self.in_msg = None
+        # self.ang_vel_z = 0.0
         self.pico_thread = threading.Thread(target=self.process_msgs, daemon=True)
         self.pico_thread.start()
 
@@ -24,15 +24,15 @@ class ThreadedMessenger:
                 self.communicator.write(self.out_msg.encode("utf-8"))
                 last_ts = curr_ts
             # Receive motion data from Pico
-            if self.communicator.in_waiting > 0:
-                self.in_msg = (
-                    self.communicator.readline().decode("utf-8", "ignore").strip()
-                )
-                if self.in_msg:
-                    try:
-                        self.ang_vel_z = float(self.in_msg)
-                    except ValueError:
-                        pass
+            # if self.communicator.in_waiting > 0:
+            #     self.in_msg = (
+            #         self.communicator.readline().decode("utf-8", "ignore").strip()
+            #     )
+            #     if self.in_msg:
+            #         try:
+            #             self.ang_vel_z = float(self.in_msg)
+            #         except ValueError:
+            #             pass
             sleep(0.01)  # prevent 100% CPU usage
 
 
@@ -58,32 +58,32 @@ if __name__ == "__main__":
     # LOOP
     msngr.out_msg = f"{modes[0]},{pulsewidths[0]},{pulsewidths[0]}\n"
     print("---\nSTANDBY, CYAN, MID, STALL")
-    print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
+    # print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
     print(f"Out message: {msngr.out_msg}")
     sleep(2)
     msngr.out_msg = f"{modes[1]},{pulsewidths[0]},{pulsewidths[0]}\n"
     print("---\nPAUSE, YELLOW, MID, STALL")
-    print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
+    # print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
     print(f"Out message: {msngr.out_msg}")
     sleep(2)
     msngr.out_msg = f"{modes[2]},{pulsewidths[1]},{pulsewidths[1]}\n"
     print("---\nNORMAL, GREEN, RIGHT, FORWARD")
-    print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
+    # print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
     print(f"Out message: {msngr.out_msg}")
     sleep(2)
     msngr.out_msg = f"{modes[3]},{pulsewidths[2]},{pulsewidths[1]}\n"
     print("---\nRECORDING, BLUE, LEFT, FORWARD")
-    print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
+    # print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
     print(f"Out message: {msngr.out_msg}")
     sleep(2)
     msngr.out_msg = f"{modes[4]},{pulsewidths[2]},{pulsewidths[2]}\n"
     print("---\nAUTOPILOT, PURPLE, LEFT, REVERSE")
-    print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
+    # print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
     print(f"Out message: {msngr.out_msg}")
     sleep(2)
     msngr.out_msg = f"{modes[5]},{pulsewidths[0]},{pulsewidths[0]}\n"
     print("---\nERROR, RED, MID, STALL")
-    print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
+    # print(f"In message (ang_vel_z): {msngr.ang_vel_z}")
     print(f"Out message: {msngr.out_msg}")
     sleep(2)
     msngr.communicator.close()

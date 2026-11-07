@@ -25,7 +25,7 @@ echo "BearCar environemnt type: $BEARCAR_ENV_TYPE"
 # Install uv
 sudo apt update && sudo apt upgrade -y
 curl -LsSf https://astral.sh/uv/install.sh | sh
-. $HOME/.local/bin/env
+. $HOME/.bashrc
 grep -qF 'eval "$(uv generate-shell-completion bash)"' "$HOME/.bashrc" || echo 'eval "$(uv generate-shell-completion bash)"' >>"$HOME/.bashrc"
 
 # Setup project env

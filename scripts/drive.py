@@ -1,3 +1,4 @@
+import sys
 import argparse
 from pathlib import Path
 import shutil
@@ -22,7 +23,7 @@ parser = argparse.ArgumentParser(description="BearCar Driver Selection")
 parser.add_argument(
     "--arch",
     type=str,
-    default="mobilenet_v3_small",
+    default="bearnet",
     help="Name of the model architecture (e.g., mobilenet_v3_small)",
 )
 parser.add_argument(

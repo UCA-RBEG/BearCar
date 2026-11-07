@@ -94,7 +94,7 @@ parser.add_argument(
 parser.add_argument(
     "--arch",
     type=str,
-    default="mobilenet_v3_small",
+    default="bearnet",
     help="Name of the model architecture (e.g., mobilenet_v3_small)",
 )
 args = parser.parse_args()

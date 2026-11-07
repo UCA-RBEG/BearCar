@@ -2,7 +2,7 @@
 
 ![bearcar_portrait](https://uca-rbeg.github.io/bearcar_docs/images/bearcar_annotate.png)
 
-BearCar is an autonomous driving platform based on an 1:16 RC car and a Raspberry Pi SBC.
+BearCar is an educational/recreational autonomous driving platform based on an 1:16 RC car.
 Visit [documentations](https://uca-rbeg.github.io/bearcar_docs/) for more details.
 
 > [!IMPORTANT]

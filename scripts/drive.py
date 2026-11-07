@@ -68,7 +68,6 @@ if args.model:
 else:
     print("~~~\nGet ready, Human!\n~~~")
 print("Place BearCar on the ground and enjoy your ride...\n")
-# sleep(1)  # Let the driver be ready
 # Init components
 picam = ThreadedCamera(params=params)
 messenger = ThreadedMessenger(port="/dev/ttyACM0", baudrate=115200)
@@ -104,15 +103,15 @@ try:
                 driver.is_paused = True
                 driver.is_recording = False
         # For debugging, uncomment following lines
-        if not frame_counts % drive_rate:
-            elapsed = time() - start_time
-            fps = drive_rate / elapsed
-            print("---")
-            print(f"steering value: {st_val}, throttle value: {th_val}")
-            print(f"Out message: {messenger.out_msg}")
-            # print(f"In message (ang_vel_z): {messenger.ang_vel_z}")
-            print(f"Processing at {fps:.2f} FPS | Frame shape: {frame.shape}")
-            start_time = time()
+        # if not frame_counts % drive_rate:
+        #     elapsed = time() - start_time
+        #     fps = drive_rate / elapsed
+        #     print("---")
+        #     print(f"steering value: {st_val}, throttle value: {th_val}")
+        #     print(f"Out message: {messenger.out_msg}")
+        #     # print(f"In message (ang_vel_z): {messenger.ang_vel_z}")
+        #     print(f"Processing at {fps:.2f} FPS | Frame shape: {frame.shape}")
+        #     start_time = time()
         # cv.imshow("Camera", cv.flip(frame, -1))  # picam mounted upside down
         # if cv.waitKey(1) == ord("q"):  # [q]uit
         #     print("Quit signal received.")

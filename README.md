@@ -31,6 +31,7 @@ grep -qF 'eval "$(uv generate-shell-completion bash)"' "$HOME/.bashrc" || echo '
 ```bash
 cd ~/BearCar
 ./setup_env.sh
+source ~/.bashrc
 ```
 
 ### Hook Up the Gamepad

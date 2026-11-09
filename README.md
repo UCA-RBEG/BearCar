@@ -22,6 +22,7 @@ git clone https://github.com/UCAEngineeringPhysics/BearCar.git
 ```bash
 # Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
 grep -qF 'eval "$(uv generate-shell-completion bash)"' "$HOME/.bashrc" || echo 'eval "$(uv generate-shell-completion bash)"' >>"$HOME/.bashrc"
 ```
 

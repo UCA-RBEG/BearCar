@@ -18,6 +18,13 @@ cd ~
 git clone https://github.com/UCAEngineeringPhysics/BearCar.git
 ```
 
+### Install [uv](https://docs.astral.sh/uv/getting-started/installation/) Python Package Manager
+```bash
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+grep -qF 'eval "$(uv generate-shell-completion bash)"' "$HOME/.bashrc" || echo 'eval "$(uv generate-shell-completion bash)"' >>"$HOME/.bashrc"
+```
+
 ### Setup Environment
 
 ```bash

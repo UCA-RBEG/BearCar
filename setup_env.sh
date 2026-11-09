@@ -21,12 +21,12 @@ x86_64)
   ;;
 esac
 echo "BearCar environemnt type: $BEARCAR_ENV_TYPE"
+sudo apt update && sudo apt upgrade -y
 
 # Install uv
-sudo apt update && sudo apt upgrade -y
-curl -LsSf https://astral.sh/uv/install.sh | sh
-. $HOME/.bashrc
-grep -qF 'eval "$(uv generate-shell-completion bash)"' "$HOME/.bashrc" || echo 'eval "$(uv generate-shell-completion bash)"' >>"$HOME/.bashrc"
+# curl -LsSf https://astral.sh/uv/install.sh | sh
+# . $HOME/.bashrc
+# grep -qF 'eval "$(uv generate-shell-completion bash)"' "$HOME/.bashrc" || echo 'eval "$(uv generate-shell-completion bash)"' >>"$HOME/.bashrc"
 
 # Setup project env
 cd $HOME/BearCar
@@ -46,5 +46,5 @@ grep -qF 'alias gobear="source $HOME/BearCar/.venv/bin/activate"' "$HOME/.bashrc
 # Output result
 PURPLE='\033[0;35m' # Coloring output
 NC='\033[0m'        # No Color
-echo -e "You may start BearCar environemnt now: ${PURPLE}gobear${NC}"
-. $HOME/.bashrc
+echo -e "Your BearCar environemnt is ready: ${PURPLE}gobear${NC}"
+echo -e "Restart shell or run: \n 'source ~/.bashrc' ro enable BearCar environment."
